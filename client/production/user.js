@@ -1,0 +1,1 @@
+"use strict";exports.__esModule=!0;var User=function(){function s(s,i,t,o,r,e){void 0===s&&(s=""),void 0===i&&(i=""),void 0===t&&(t=""),void 0===o&&(o=""),void 0===r&&(r=""),void 0===e&&(e=""),this.first=s,this.last=i,this.username=t,this.password=o,this.confirm=r,this.email=e}return s}();exports.User=User;

@@ -1,0 +1,39 @@
+{
+  "name": "oauth",
+  "version": "1.0.0",
+  "description": "oauth server",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/denisvasinn/openid.git"
+  },
+  "author": "Denis Vasin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/denisvasinn/openid/issues"
+  },
+  "homepage": "https://github.com/denisvasinn/openid#readme",
+  "dependencies": {
+    "body-parser": "^1.16.0",
+    "co": "^4.6.0",
+    "cookie-parser": "^1.4.3",
+    "ejs": "^2.5.5",
+    "emailjs": "^1.0.8",
+    "express": "^5.0.0-alpha.2",
+    "express-session": "^1.14.2",
+    "mongoose": "^4.7.7",
+    "morgan": "^1.8.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-gzip": "^1.4.0",
+    "gulp-sass": "^3.1.0",
+    "gulp-typescript": "^3.1.5",
+    "gulp-uglify": "^2.1.0",
+    "typescript": "^2.2.1"
+  }
+}
