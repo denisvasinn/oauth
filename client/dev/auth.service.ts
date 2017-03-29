@@ -5,14 +5,15 @@ import 'rxjs/add/operator/map';
 
 @Injectable()
 export class AuthService {
-    private http: Http;
-    AuthService(@Inject(Http) http: Http){
+    http: Http;
+
+    constructor(@Inject(Http) http: Http){
         this.http = http;
     }
     login(username: string = '', password: string = ''){
         let headers = new Headers({'Content-Type': 'application/json'});
         return this.http
-            .post('/auth/login', JSON.stringify({username, password}), { headers })
+            .post('/auth/login', JSON.stringify({ username, password }), { headers })
             .map(res => res.json());
     }
     register(user: User){
@@ -21,8 +22,7 @@ export class AuthService {
             .post('/auth/register', JSON.stringify(user), { headers })
             .map(res => res.json());
     }
-    storeUserData(token: string, user: Object){
-        localStorage.setItem('user_token', token);
+    storeUserData(user: Object){
         localStorage.setItem('user', JSON.stringify(user));
     }
     clearUserData(){

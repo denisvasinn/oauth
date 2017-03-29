@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
@@ -12,8 +13,8 @@ import { User } from './user';
       <div>
         <form class="form clearfix" [formGroup]="form" (ngSubmit)="onSubmit($event)" action="/auth/login" method="POST">
           <label>Log In</label>
-          <input class="form-control" formControlName="username" placeholder="Username">
-          <input type="password" class="form-control" formControlName="password" placeholder="Password">
+          <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
+          <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
           <button class='btn'>SUBMIT</button>
         </form>
       </div>
@@ -30,32 +31,41 @@ export class LogInComponent {
   form: FormGroup;
   user: User;
   authService: AuthService;
+  router: Router;
 
   constructor(@Inject(FormBuilder) fb: FormBuilder,
-              @Inject(AuthService) authService: AuthService) {
+              @Inject(AuthService) authService: AuthService,
+              @Inject(Router) router: Router) {
     this.authService = authService;
+    this.router = router;
     this.user = new User();
     this.form = fb.group({
       username: [this.user.username, Validators.compose([Validators.required, Validators.minLength(3)])],
       password: [this.user.password, Validators.compose([Validators.required, Validators.minLength(5)])]
     });
+
+    this.form.get('username').valueChanges.subscribe(
+      (username: any) => { console.log(this.user.username) },
+      (error: any) => { console.error(error); }
+    );
   }
 
   onSubmit(event: any){
+    event.preventDefault();
     let { username, password } = this.user;
     if (this.form.valid) {
       this.authService.login(username, password)
         .subscribe(res => {
-          if(res.succes){
-            this.authService.storeUserData(res.token, res.user);
+          res = JSON.parse(res);
+          if(res.success){
             console.log('logged in succesfully');
-          } else{
-            console.log('error');
+            this.authService.storeUserData(res.user);
+            this.router.navigate(['/login']);
           }
-        }, err => console.log(err));
-    } else{
-      console.log('error');
-    }
-    return false;
+          else console.log(JSON.stringify(res.err));
+        }, 
+        err => console.log(JSON.stringify(err)));
+    } 
+    else console.error('Form is not valid');
   }
 }

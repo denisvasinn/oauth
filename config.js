@@ -4,7 +4,7 @@ module.exports = {
     session: {
         name: 'id',
         secret: 'z3Cuf3ij7',
-        resave: false,
+        resave: true,
         saveUninitialized: false,
         cookie: {
             secure: true,

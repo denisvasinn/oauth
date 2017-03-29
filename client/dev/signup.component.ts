@@ -20,15 +20,15 @@ function passwordMatcher(c: AbstractControl){
         <form class="form" [formGroup]="form" (ngSubmit)="onSubmit($event)">
           <div formGroupName="name">
             <label>Name</label>
-            <input class="form-control" formControlName="first" placeholder="First">
-            <input class="form-control" formControlName="last" placeholder="Last">
+            <input class="form-control" formControlName="first" [(ngModel)]="user.first" placeholder="First">
+            <input class="form-control" formControlName="last" [(ngModel)]="user.last" placeholder="Last">
           </div>
           <div formGroupName="account">
             <label>Account</label>
-            <input class="form-control" formControlName="username" placeholder="Username">
-            <input type="password" class="form-control" formControlName="password" placeholder="Password">
-            <input type="password" class="form-control" formControlName="confirm" placeholder="Confirm password">
-            <input class="form-control" formControlName="email" placeholder="Email">
+            <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
+            <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
+            <input type="password" class="form-control" formControlName="confirm" [(ngModel)]="user.confirm" placeholder="Confirm password">
+            <input class="form-control" formControlName="email" [(ngModel)]="user.email" placeholder="Email">
           </div>
           <button class="btn">SUBMIT</button>
         </form>
@@ -54,10 +54,15 @@ function passwordMatcher(c: AbstractControl){
 export class SignUpComponent {
   form: FormGroup;
   user: User;
+  authService: AuthService;
+  router: Router;
 
   constructor(@Inject(FormBuilder) fb: FormBuilder,
-              private authService: AuthService,
-              private router: Router) {
+              @Inject(AuthService) authService: AuthService,
+              @Inject(Router) router: Router) {
+    this.user = new User();
+    this.authService = authService;
+    this.router = router;
     this.form = fb.group({
       name: fb.group({
         first: [this.user.first, Validators.compose([Validators.required, Validators.minLength(2)])],
@@ -72,25 +77,24 @@ export class SignUpComponent {
     });
 
     this.form.get('account.username').valueChanges.subscribe(
-      (username: any) => { console.log(username); },
+      (username: any) => { console.log(this.user.username); },
       (error: any) => { console.error(error); }
     );
   }
 
   onSubmit(event: any){
+    event.preventDefault();
     if(this.form.valid){
       this.authService.register(this.user)
         .subscribe(res => {
+          res = JSON.parse(res);
           if(res.success){
             console.log('successfully registered');
             this.router.navigate(['/login']);
           }
         },
-        err => console.log(err));
+        err => console.error(err));
     }
-    else{
-      console.log('form isnt valid');
-    }
-    return false;
+    else console.error('Form is not valid');
   }
 }

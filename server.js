@@ -20,20 +20,20 @@ const option = {
 }
 
 //app.use(logger('dev'));
+//Set static folder
+app.use(express.static(path.join(__dirname, 'client')));
 //View engine
 app.set('views', path.join(__dirname, 'client'));
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 
 app.disable('x-powered-by');
-//Set static folder
-app.use(express.static(path.join(__dirname, 'client')));
 
-//Body parser
+//middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cookieParser());
 app.use(session(config.session));
+
 
 app.use('/', index);
 app.use('/auth', auth);
@@ -49,7 +49,7 @@ app.use((req, res, next) => {
 // development error handler
 // will print stacktrace
 if (app.get('env') === 'development') {
-    app.use((err, req, res, next) => res.status(err.status || 500).end(err));
+    app.use((err, req, res, next) => res.status(err.status || 500).end(JSON.stringify(err)));
 }
 
 //app.set('env', 'production');
