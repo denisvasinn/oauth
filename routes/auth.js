@@ -4,9 +4,6 @@ const router = express.Router();
 const User = require('../controllers/user');
 
 router.all('*', (req, res, next) => {
-    console.log(req.query);
-    console.log(req.body);
-    console.log(req.param);
     return next();
 });
 

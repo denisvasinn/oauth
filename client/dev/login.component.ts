@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -12,10 +12,15 @@ import { User } from './user';
     <div class="form-container">
       <div>
         <form class="form clearfix" [formGroup]="form" (ngSubmit)="onSubmit($event)" action="/auth/login" method="POST">
-          <label>Log In</label>
-          <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
-          <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
-          <button class='btn'>SUBMIT</button>
+          <div class="form-group">
+            <label>Username</label>
+            <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
+          </div>
+          <button class='btn btn-secondary'>SUBMIT</button>
         </form>
       </div>
       <div class="popup" [class.active]="form.dirty && form.invalid">
@@ -27,7 +32,7 @@ import { User } from './user';
     <div>
   `
 })
-export class LogInComponent {
+export class LogInComponent implements OnInit {
   form: FormGroup;
   user: User;
   authService: AuthService;
@@ -50,6 +55,10 @@ export class LogInComponent {
     );
   }
 
+  ngOnInit(){
+    if (this.authService.isLogedIn()) this.router.navigate(['/protected']);
+  }
+
   onSubmit(event: any){
     event.preventDefault();
     let { username, password } = this.user;
@@ -60,7 +69,7 @@ export class LogInComponent {
           if(res.success){
             console.log('logged in succesfully');
             this.authService.storeUserData(res.user);
-            this.router.navigate(['/login']);
+            this.router.navigate(['/protected']);
           }
           else console.log(JSON.stringify(res.err));
         }, 

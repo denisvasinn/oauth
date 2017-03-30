@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators, ValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
@@ -10,8 +10,6 @@ function passwordMatcher(c: AbstractControl){
     return (c.get('password').value === c.get('confirm').value) ? null: { nomatch: true };
 }
 
-//[class.error]="form.get('first').touched && !form.get('first').valid"
-
 @Component({
   selector: 'sign-up-component',
   template: `
@@ -20,24 +18,37 @@ function passwordMatcher(c: AbstractControl){
         <form class="form" [formGroup]="form" (ngSubmit)="onSubmit($event)">
           <div formGroupName="name">
             <label>Name</label>
-            <input class="form-control" formControlName="first" [(ngModel)]="user.first" placeholder="First">
-            <input class="form-control" formControlName="last" [(ngModel)]="user.last" placeholder="Last">
+            <div class="form-group">
+              <input class="form-control" formControlName="first" [(ngModel)]="user.first" placeholder="First">
+            </div>
+            <div class="form-group">
+              <label></label>
+              <input class="form-control" formControlName="last" [(ngModel)]="user.last" placeholder="Last">
+            </div>
           </div>
           <div formGroupName="account">
             <label>Account</label>
-            <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
-            <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
-            <input type="password" class="form-control" formControlName="confirm" [(ngModel)]="user.confirm" placeholder="Confirm password">
-            <input class="form-control" formControlName="email" [(ngModel)]="user.email" placeholder="Email">
+            <div class="form-group">
+              <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
+            </div>
+            <div class="form-group">
+              <label></label>
+              <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
+            </div>
+            <div class="form-group">
+              <label></label>
+              <input type="password" class="form-control" formControlName="confirm" [(ngModel)]="user.confirm" placeholder="Confirm password">
+            </div>
+            <div class="form-group">
+              <label></label>
+              <input class="form-control" formControlName="email" [(ngModel)]="user.email" placeholder="Email">
+            </div>
           </div>
-          <button class="btn">SUBMIT</button>
+          <button class="btn btn-secondary">SUBMIT</button>
         </form>
       </div>
-      <div>
-        <p>Value: {{ form.get('account').value | json }}</p>
-        <p>Validation status: {{ form.get('account').status | json }}</p>
-        <p>Validation errors: {{ form.get('account').errors | json }}</p>
-      </div>
+      <p>VALID: {{ form.valid | json }}</p>
+      <p>Username: {{ form.get("account.username").status | json }}</p>
       <div class="popup" [class.active]="form.dirty && form.invalid">
         <p>Error</p>
         <p>All fields are required.</p>
@@ -77,7 +88,7 @@ export class SignUpComponent {
     });
 
     this.form.get('account.username').valueChanges.subscribe(
-      (username: any) => { console.log(this.user.username); },
+      (username: string) => { },
       (error: any) => { console.error(error); }
     );
   }

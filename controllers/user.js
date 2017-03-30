@@ -50,7 +50,12 @@ module.exports = {
             
             return (req.session.sender)?
                 res.status(302).redirect('/openid'):
-                res.status(200).json(JSON.stringify({ success: true, user }));
+                res.status(200).json(JSON.stringify({ success: true, user: {
+                    _id: user._id,
+                    first: user.first,
+                    last: user.last,
+                    email: user.email
+                } }));
         }).catch(err => {
             console.error('catch err: ' + err);
             res.status(200).json(JSON.stringify({ success: false, err }));
@@ -58,10 +63,7 @@ module.exports = {
     },
     logout: (req, res, next) => {
         if(req.session) req.session.destroy(err => {
-            if(err){
-                console.error(err);
-                next(err);
-            }
+            if(err) next(err);
             else res.status(200).json({ success: true });
         });
     },
@@ -83,7 +85,12 @@ module.exports = {
 
             req.session._id = user._id.toString();
 
-            return res.status(200).json(JSON.stringify({ success: true, user }));
+            return res.status(200).json(JSON.stringify({ success: true, user: {
+                _id: user._id,
+                first: user.first,
+                last: user.last,
+                email: user.email
+            }}));
         })
         .catch(err => {
             console.error(err);
@@ -96,7 +103,12 @@ module.exports = {
             if(!req.query.authToken) return next();
             let authToken = req.query.authToken;
             User.findOne({ authToken })
-            .then(user => res.status(200).json(user))
+            .then(user => res.status(200).json({ user: {
+                _id: user._id,
+                first: user.first,
+                last: user.last,
+                email: user.email
+            }}))
             .catch(err => console.error(err));
         },
         (req, res, next) => {
