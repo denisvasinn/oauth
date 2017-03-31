@@ -15,7 +15,7 @@ const auth = require('./routes/auth');
 const user = require('./routes/user');
 
 const option = {
-    key: fs.readFileSync(path.join(__dirname, '/ssl/oauth.pem')),
+    key: fs.readFileSync(path.join(__dirname, '/ssl/oauth.key')),
     cert: fs.readFileSync(path.join(__dirname, '/ssl/oauth.crt'))
 }
 

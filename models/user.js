@@ -12,7 +12,7 @@ let userSchema = new mongoose.Schema({
     password: String,
     salt: String,
     email: String,
-    authToken: String,
+    token: { type: String, default: '' },
     date: { type: Date, default: Date.now() }
 });
 

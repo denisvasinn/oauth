@@ -2,17 +2,18 @@
 const crypto = require('crypto');
 const User = require('../views/user');
 const co = require('co');
+const config = require('../config');
 
+var createHash = (lenght) => {
+    var alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        str = '';
+    for(let i = 0; i < lenght; i++){
+        let index = Math.floor(Math.random() * (alphabet.length - 1));
+        str += alphabet[index];
+    }
+    return str;
+}
 module.exports = {
-    createHash: (lenght) => {
-        var alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            str = '';
-        for(let i = 0; i < lenght; i++){
-            let index = Math.floor(Math.random() * (alphabet.length - 1));
-            str += alphabet[index];
-        }
-        return str;
-    },
     index: (req, res, next) => {
         res.status(200).render('index.html');
     },
@@ -34,6 +35,7 @@ module.exports = {
         .catch(err => res.status(401).end('Unauthorized'));
     },
     login: (req, res, next) => {
+        console.log('login');
         co(function *(){
             let username, password, salt, user;
             ({ username, password } = req.body);
@@ -47,9 +49,9 @@ module.exports = {
             if (password !== user.password) throw new Error(`wrong password: ${password}`);
 
             req.session._id = user._id.toString();
-            
+
             return (req.session.sender)?
-                res.status(302).redirect('/openid'):
+                res.status(302).redirect('/auth/oauth'):
                 res.status(200).json(JSON.stringify({ success: true, user: {
                     _id: user._id,
                     first: user.first,
@@ -97,40 +99,54 @@ module.exports = {
             res.status(404).json(JSON.stringify({ success: false, err }));
         });
     },
-    oauth: [
-        (req, res, next) => {
-            console.log('oauth 1');
-            if(!req.query.authToken) return next();
-            let authToken = req.query.authToken;
-            User.findOne({ authToken })
-            .then(user => res.status(200).json({ user: {
-                _id: user._id,
-                first: user.first,
-                last: user.last,
-                email: user.email
-            }}))
-            .catch(err => console.error(err));
-        },
-        (req, res, next) => {
-            console.log('oauth 2');
-            let id, password, sender, authToken;
-            ({ id, password } = req.session);
-            if(!id || !password) return next();
-            sender = req.session.sender;
-            delete req.session.sender;
-            authToken = this.createHash(30);
-            User.update({ _id: id }, { $set: { authToken }})
-            .then(user => {
-                setTimeout(() => User.update({ _id: id }, { $set: { authToken: '' }}), config.expires);
-                res.setHeader('Location',`https://${sender}/auth/login?authToken=${authToken}`);
-                res.status(302).end();
-            })
-            .catch(err => console.error(err));
-        },
-        (req, res, next) => {
-            console.log('oauth 3');
-            res.session.sender = req.query.sender;
-            res.status(200).render('index.html');
-        }
-    ]
+    oauth: [(req, res, next) => {
+        console.log('QUERY');
+        console.log(req.query);
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    }, (req, res, next) => {
+        if(!req.query.token) return next();
+        console.log('oauth 1');
+        
+        let token = req.query.token;
+        User.findOne({ token })
+        .then(user => res.status(200).json({ user: {
+            _id: user._id,
+            first: user.first,
+            last: user.last,
+            email: user.email
+        }}))
+        .catch(err => console.error(err));
+    }, (req, res, next) => {
+        
+        let _id, sender, token;
+        _id = req.session._id;
+        sender = req.session.sender || req.query.sender;
+        if(!(_id && sender)) return next();
+        console.log('oauth 2');
+        console.log(_id);
+        
+        console.log(sender);
+        delete req.session.sender;
+        token = createHash(30);
+        console.log(token);
+        User.findOne({ _id })
+        .then(user => {
+            console.log(user);
+            return User.update({ _id }, { $set: { token }});
+        })
+        .then(() => {
+            console.log('here');
+            setTimeout(() => User.update({ _id }, { $set: { token: '' }}).then(console.log('token deleted')), config.expires);
+            res.setHeader('Location',`https://${sender}/auth/login?token=${token}`);
+            res.status(302).end();
+        })
+        .catch(err => console.error(err));
+    }, (req, res, next) => {
+        console.log('oauth 3');
+        req.session.sender = req.query.sender;
+        console.log(req.session.sender);
+        res.status(302).redirect('/');
+    }]
 }
