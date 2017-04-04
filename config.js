@@ -10,7 +10,7 @@ module.exports = {
             secure: true,
             httpOnly: true,
             path: '/', 
-            maxAge: 1 * 24 * 60 * 3600
+            maxAge: 1 * 24 * 60 * 60 * 1000
         }
     },
     mail: {

@@ -2,6 +2,7 @@
 const crypto = require('crypto');
 const User = require('../views/user');
 const co = require('co');
+const cookieParser = require('cookie-parser');
 const config = require('../config');
 
 var createHash = (lenght) => {
@@ -35,7 +36,6 @@ module.exports = {
         .catch(err => res.status(401).end('Unauthorized'));
     },
     login: (req, res, next) => {
-        console.log('login');
         co(function *(){
             let username, password, salt, user;
             ({ username, password } = req.body);
@@ -50,14 +50,15 @@ module.exports = {
 
             req.session._id = user._id.toString();
 
-            return (req.session.sender)?
-                res.status(302).redirect('/auth/oauth'):
-                res.status(200).json(JSON.stringify({ success: true, user: {
-                    _id: user._id,
-                    first: user.first,
-                    last: user.last,
-                    email: user.email
-                } }));
+            return res.status(200).json({
+                    success: true,
+                    user: {
+                        _id: user._id,
+                        first: user.first,
+                        last: user.last,
+                        email: user.email
+                    } 
+                });
         }).catch(err => {
             console.error('catch err: ' + err);
             res.status(200).json(JSON.stringify({ success: false, err }));
@@ -66,7 +67,11 @@ module.exports = {
     logout: (req, res, next) => {
         if(req.session) req.session.destroy(err => {
             if(err) next(err);
-            else res.status(200).json({ success: true });
+            else {
+                res.clearCookie('id');
+                res.clearCookie('sender');
+                res.status(200).json({ success: true });
+            }
         });
     },
     register: (req, res, next) => {
@@ -87,12 +92,15 @@ module.exports = {
 
             req.session._id = user._id.toString();
 
-            return res.status(200).json(JSON.stringify({ success: true, user: {
-                _id: user._id,
-                first: user.first,
-                last: user.last,
-                email: user.email
-            }}));
+            return res.status(200).json(JSON.stringify({
+                success: true,
+                user: {
+                    _id: user._id,
+                    first: user.first,
+                    last: user.last,
+                    email: user.email
+                }
+            }));
         })
         .catch(err => {
             console.error(err);
@@ -100,53 +108,52 @@ module.exports = {
         });
     },
     oauth: [(req, res, next) => {
-        console.log('QUERY');
-        console.log(req.query);
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     }, (req, res, next) => {
         if(!req.query.token) return next();
-        console.log('oauth 1');
-        
+        console.log('GET /oauth1');
         let token = req.query.token;
         User.findOne({ token })
-        .then(user => res.status(200).json({ user: {
-            _id: user._id,
-            first: user.first,
-            last: user.last,
-            email: user.email
-        }}))
-        .catch(err => console.error(err));
+        .then(user => {
+            res.status(200).json({
+                success: true,
+                user: {
+                    _id: user._id,
+                    first: user.first,
+                    last: user.last,
+                    email: user.email
+                }
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(404).end(JSON.stringify(err));
+        });
     }, (req, res, next) => {
-        
         let _id, sender, token;
         _id = req.session._id;
-        sender = req.session.sender || req.query.sender;
+        sender = req.cookies.sender || req.query.sender;
         if(!(_id && sender)) return next();
-        console.log('oauth 2');
-        console.log(_id);
-        
-        console.log(sender);
-        delete req.session.sender;
+        console.log('GET /oauth2');
         token = createHash(30);
-        console.log(token);
-        User.findOne({ _id })
-        .then(user => {
-            console.log(user);
-            return User.update({ _id }, { $set: { token }});
-        })
+        User.update({ _id }, { $set: { token }})
         .then(() => {
-            console.log('here');
-            setTimeout(() => User.update({ _id }, { $set: { token: '' }}).then(console.log('token deleted')), config.expires);
-            res.setHeader('Location',`https://${sender}/auth/login?token=${token}`);
-            res.status(302).end();
+            setTimeout(() => {
+                    User.update({ _id }, { $set: { token: '' }})
+                    .then(() => console.log('token deleted'))
+                }, config.expires
+            );
+            res.location(`https://${sender}/auth/login?token=${token}`).status(302).end();
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error(err);
+            res.status(404).end(JSON.stringify(err));
+        });
     }, (req, res, next) => {
-        console.log('oauth 3');
-        req.session.sender = req.query.sender;
-        console.log(req.session.sender);
+        console.log('GET /oauth3')
+        res.cookie('sender', req.query.sender, {maxAge: config.expires});
         res.status(302).redirect('/');
     }]
 }

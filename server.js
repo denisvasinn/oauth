@@ -4,8 +4,8 @@ const express = require('express'),
     https = require('https'),
     fs = require('fs'),
     path = require('path'),
-    cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
+    cookieParser = require('cookie-parser'),
     session = require('express-session'),
     logger = require('morgan'),
     config = require('./config');
@@ -19,7 +19,7 @@ const option = {
     cert: fs.readFileSync(path.join(__dirname, '/ssl/oauth.crt'))
 }
 
-//app.use(logger('dev'));
+app.use(logger('dev'));
 //Set static folder
 app.use(express.static(path.join(__dirname, 'client')));
 //View engine
@@ -32,6 +32,7 @@ app.disable('x-powered-by');
 //middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(session(config.session));
 
 
@@ -52,7 +53,7 @@ if (app.get('env') === 'development') {
     app.use((err, req, res, next) => res.status(err.status || 500).end(JSON.stringify(err)));
 }
 
-//app.set('env', 'production');
+app.set('env', 'production');
 app.set('port', process.env.PORT || config.port);
 https.createServer(option, app).listen(app.get('port'), () => {
     console.log(`Server started in ${app.get('env')} mode on port ${app.get('port')}.`);

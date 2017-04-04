@@ -14,17 +14,16 @@ import { User } from './user';
         <form class="form clearfix" [formGroup]="form" (ngSubmit)="onSubmit($event)" action="/auth/login" method="POST">
           <div class="form-group">
             <label>Username</label>
-            <input class="form-control" formControlName="username" [(ngModel)]="user.username" placeholder="Username">
+            <input class="form-control" formControlName="username" name="username" [(ngModel)]="user.username" placeholder="Username">
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input type="password" class="form-control" formControlName="password" [(ngModel)]="user.password" placeholder="Password">
+            <input type="password" class="form-control" formControlName="password" name="password" [(ngModel)]="user.password" placeholder="Password">
           </div>
-          <button class='btn btn-secondary'>SUBMIT</button>
+          <input type="submit" value="SUBMIT" class='btn btn-secondary'>
         </form>
       </div>
       <div class="popup" [class.active]="form.dirty && form.invalid">
-        <p>Error</p>
         <p>Both fields are required.</p>
         <p *ngIf="form.get('username').invalid">Name must be at least 3 characters long.</p>
         <p *ngIf="form.get('password').invalid">Password must be at least 5 characters long.</p>
@@ -50,7 +49,7 @@ export class LogInComponent implements OnInit {
     });
 
     this.form.get('username').valueChanges.subscribe(
-      (username: any) => { console.log(this.user.username) },
+      (username: any) => { },
       (error: any) => { console.error(error); }
     );
   }
@@ -60,19 +59,22 @@ export class LogInComponent implements OnInit {
   }
 
   onSubmit(event: any){
-    event.preventDefault();
     let { username, password } = this.user;
+    event.preventDefault();
     if (this.form.valid) {
       this.authService.login(username, password)
         .subscribe(res => {
-          res = JSON.parse(res);
+          console.log(res);
+          console.log(typeof res);
+          res = ((typeof res) == 'string')? JSON.parse(res): res;
           if(res.success){
-            console.log('logged in succesfully');
             this.authService.storeUserData(res.user);
-            this.router.navigate(['/protected']);
+            let sender = this.authService.getCookie('sender');
+            if(sender) document.location.href = `/auth/oauth`;
+            else this.router.navigate(['/protected']);
           }
-          else console.log(JSON.stringify(res.err));
-        }, 
+          else console.log('error');
+        },
         err => console.log(JSON.stringify(err)));
     } 
     else console.error('Form is not valid');
