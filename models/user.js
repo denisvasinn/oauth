@@ -1,7 +1,7 @@
 'use strict';
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://denis:35485102@ds157829.mlab.com:57829/denisvasinn_db')
+mongoose.connect('')
     .then(res => console.log('mongodb connected'))
     .catch(err => console.log('mongo error'));
 
