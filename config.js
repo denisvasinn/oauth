@@ -14,8 +14,8 @@ module.exports = {
         }
     },
     mail: {
-        user: 'dvpersonalsite@gmail.com',
-        password: 'dvps1347',
+        user: '',
+        password: '',
         host:	'smtp.gmail.com',
         ssl: true
     }
